@@ -1,0 +1,10 @@
+{
+  "name": "ethon-experimental",
+  "version": "0.0.1",
+  "description": "testing distributed game engine",
+  "author": "David Morcillo <david@imesmes.com>",
+  "dependencies": {
+    "socket.io": "~0.9.5"
+  },
+  "engine": "node 0.6.18"
+}

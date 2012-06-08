@@ -1,0 +1,83 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      /**
+       *   Provides requestAnimationFrame in a cross browser way.
+       */ 
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = (function() {
+          return window.requestAnimationFrame ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame ||
+          window.oRequestAnimationFrame ||
+          window.msRequestAnimationFrame ||
+          function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+            window.setTimeout(callback, 1000/60);
+          };
+        })();
+      }
+
+      var quads = [];
+      var pacman = { x: 0, y: 0, radius: 10 };
+      var clicks = [];
+      var drawing = false;
+      var socket = io.connect('http://localhost');
+
+      window.addEventListener('load', function() {
+        var canvas = document.getElementById('game');
+        var ctx = canvas.getContext("2d");
+
+        canvas.addEventListener('mousedown', function(event) {
+          drawing = true;
+        });
+
+        canvas.addEventListener('mouseup', function(event) {
+          drawing = false;
+        });
+
+        canvas.addEventListener('mousemove', function(event) {
+          if(drawing) {
+            clicks.push({ x: event.clientX, y: event.clientY });
+          }
+        });
+
+        function render() {
+          var i, l, quad;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = "#ff0000";
+          for(i = 0, l = quads.length; i < l; i++) {
+            quad = quads[i];
+            ctx.fillRect(quad.x, quad.y, quad.w, quad.h);
+          }
+          
+          ctx.beginPath();
+          ctx.arc(pacman.x + pacman.radius, pacman.y + pacman.radius, 
+            pacman.radius, 0, 2 * Math.PI, true);
+
+          ctx.fillStyle = "#ffff00";
+          ctx.fill();
+          ctx.stroke();
+
+          socket.emit('update', { clicks: clicks });
+
+          // Clear events
+          clicks = [];
+        }
+
+        socket.on('render', function (data) {
+          quads = data.quads;
+          pacman = data.pacman;
+          requestAnimationFrame(render);
+        });
+      });
+    </script>
+  </head>
+  <body style="padding: 0; margin: 0; border: 0;">
+    <canvas id="game" width="640" height="480" style="border: 1px solid #000;">
+      This browser is prehistoric!. Update or die!
+    </canvas>
+  </body>
+</html>
